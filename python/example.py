@@ -29,6 +29,8 @@ class ExampleCommand(BotCommand):
 
 class ExamplePlugin(BotPlugin):
     def onLine(self,user,chan,line):
+        ## If you want a stream instead of line methods on user,
+        ## run user.getStream()
         pass
     def onSlashMe(self,user,chan,line):
         pass

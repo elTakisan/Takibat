@@ -8,7 +8,7 @@ public class Bot extends Thread{
 	public static Properties runningConfig;
 	private final BufferedReader rdr;
 	private final PrintWriter out;
-	public Bot(Socket s,Properties props) throws IOException{
+	public Bot(Socket s,Properties props,Bot b) throws IOException{
 		runningConfig = props;
 		rdr = new BufferedReader(new InputStreamReader(s.getInputStream(),props.getProperty("bot.charset")));
 		out = new PrintWriter(new OutputStreamWriter(s.getOutputStream(),props.getProperty("bot.charset")));
