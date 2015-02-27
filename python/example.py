@@ -10,7 +10,7 @@ from ninja.pelirrojo.takibat.bot import BotPlugin,BotCommand
 class ExampleCommand(BotCommand):
     # provides = command that runs this code
     provides = [ "example" ]
-    def onCommand(self,user,chan,cmd,args,raw):
+    def onCommand(self,user,chan,cmd,args,raw,out,err):
         """
         Arguments:
 
@@ -19,6 +19,8 @@ class ExampleCommand(BotCommand):
         cmd  === The Command the user ran
         args === The Arguments to the command
         raw  === The Raw String Line
+        out  === Standard Output (Java PrintStream with a .slashMe(String))
+        err  === Standard Error  (Java PrintStream with a .slashMe(String))
         """
         if user.isOp():
             chan.say("Hi {}! You're an Operator!".format(user.name))

@@ -8,4 +8,6 @@ public interface User{
 	public boolean isOp();
 	public void say(String line);
 	public void notice(String line);
+	public IRCPrintStream getPrintStream();
+	public IRCPrintStream getNoticeStream();
 }
