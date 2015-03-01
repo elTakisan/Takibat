@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from ninja.pelirrojo.takibat.bot import BotPlugin,BotCommand
+from ninja.pelirrojo.takibat.bot import BotPlugin,BotCommand,BotThread
 
 # The Difference between a Command and a Plugin is that a Command
 # is only handed execution when it is invoked, and a Plugin is
