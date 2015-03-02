@@ -9,7 +9,7 @@ public class ParsedLine{
 	}
 
 	protected static ParsedLine parse(String s){
-		if(s.indexOf(" PRIVMSG ") > 1){
+		if(s.indexOf(" PRIVMSG ") > 1 || s.indexOf(" NOTICE ") > 1){
 			return new PrivMsg(s);
 		}
 		return null;
