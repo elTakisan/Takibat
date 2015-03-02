@@ -2,6 +2,7 @@ package ninja.pelirrojo.takibat.irc;
 
 import java.io.*;
 import java.net.Socket;
+import ninja.pelirrojo.util.*;
 
 /**
  * Class of an IRC Connection.
@@ -11,17 +12,6 @@ import java.net.Socket;
  * @version INDEV-0
  */
 public abstract class IRCConnection extends Thread implements Runnable{
-	public class MultiOutputStream extends OutputStream{
-		private final OutputStream[] outs;
-		public void write(int b) throws IOException{
-			for(OutputStream o:outs){
-				o.write(b);
-			}
-		}
-		public MultiOutputStream(OutputStream[] outs){
-			this.outs = outs;
-		}
-	}
 	/**
 	 * Thread to parse an IRC Line.
 	 * 
@@ -49,9 +39,9 @@ public abstract class IRCConnection extends Thread implements Runnable{
 			}
 		}
 	}
-	/** Reader in from the Connection. */
+	/** InputStream from the Connection. */
 	private final InputStream in;
-	/** Writer out to the Connection. */
+	/** OutputStream to the Connection. */
 	private final OutputStream out;
 	
 	public IRCConnection(final OutputStream out,final InputStream in,final String nick,final String pass,final int pushpings) throws IOException{
@@ -62,7 +52,11 @@ public abstract class IRCConnection extends Thread implements Runnable{
 		this.out.write(String.format("NICK %s\r\n",nick).getBytes());
 		this.out.write(String.format("USER %s %s %s :%s\r\n",nick,nick,"localhost",nick).getBytes());
 	}
-	
+	/**
+	 * Does stuff with a Line from the Server.
+	 * 
+	 * @param line Server Line
+	 */
 	public abstract void onLine(ParsedLine line);
 	
 	public void run(){
@@ -91,16 +85,29 @@ public abstract class IRCConnection extends Thread implements Runnable{
 			System.err.printf("[E] %s%n",e.getLocalizedMessage());
 		}
 	}
+	/**
+	 * Joins an IRC Channel.
+	 * 
+	 * @param channel Channel to join
+	 */
+	public void join(String channel){
+		try{
+			out.write(String.format("JOIN %s\r\n",channel).getBytes());
+		}
+		catch(IOException e){
+			System.err.printf("[E] %s%n",e.getLocalizedMessage());
+		}
+	}
 	
 	public static void main(String[] args) throws Exception{
+		// Testing Program XXX
 		System.out.println("[I] Init");
 		Socket sock = new Socket("morgan.freenode.net",6667);
 		IRCConnection conn = new IRCConnection(sock.getOutputStream(),sock.getInputStream(),"takibot",null,0){
-			public void onLine(ParsedLine line){
-				
-			}
+			public void onLine(ParsedLine line){}
 		};
 		conn.start();
+		conn.join("#takisan");
 		conn.join();
 		sock.close();
 	}
