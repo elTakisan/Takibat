@@ -2,7 +2,8 @@ package ninja.pelirrojo.takibat.irc;
 
 import java.io.*;
 import java.net.Socket;
-import ninja.pelirrojo.util.*;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Class of an IRC Connection.
@@ -11,7 +12,7 @@ import ninja.pelirrojo.util.*;
  * @since INDEV-0
  * @version INDEV-0
  */
-public abstract class IRCConnection extends Thread implements Runnable{
+public final class IRCConnection extends Thread implements Runnable{
 	/**
 	 * Thread to parse an IRC Line.
 	 * 
@@ -25,9 +26,7 @@ public abstract class IRCConnection extends Thread implements Runnable{
 			this.line = line;
 		}
 		public void run(){
-			System.out.printf("[C] %s%n",line);
 			if(this.line.startsWith("PING ")){
-				// It's a Ping line, send a Pong Back
 				try{
 					System.out.println("[I] Sent Pong");
 					out.write("PONG\r\n".getBytes() );
@@ -35,30 +34,78 @@ public abstract class IRCConnection extends Thread implements Runnable{
 				catch(IOException e){
 					
 				}
-				ParsedLine.parse(this.line);
+			}
+			else{
+				ParsedLine line = ParsedLine.parse(this.line);
+				recievedStack.add(line);
+				onLine(line);
 			}
 		}
 	}
 	/** InputStream from the Connection. */
-	private final InputStream in;
+	protected final InputStream in;
 	/** OutputStream to the Connection. */
-	private final OutputStream out;
+	protected final OutputStream out;
 	
+	protected static IRCConnection instance;
+	
+	protected final String myNick;
+	/**
+	 * Creates a new IRC Connection
+	 * 
+	 * @param out OutputStream
+	 * @param in InputStream
+	 * @param nick Nickname to use
+	 * @param pass Password to Connect (may be null)
+	 * @param pushpings Push the Pings up to the Server
+	 * @throws IOException
+	 */
 	public IRCConnection(final OutputStream out,final InputStream in,final String nick,final String pass,final int pushpings) throws IOException{
-		this.out = new MultiOutputStream(new OutputStream[]{out,System.out});
+		this.out = out;
 		this.in  = in;
+		this.myNick = nick;
 		if(pass != null)
 			this.out.write(String.format("PASS %s\r\n",pass).getBytes());
 		this.out.write(String.format("NICK %s\r\n",nick).getBytes());
 		this.out.write(String.format("USER %s %s %s :%s\r\n",nick,nick,"localhost",nick).getBytes());
+		
+		instance = this;
+	}
+	/** Stack of incoming IRC Messages. */
+	private List<ParsedLine> recievedStack = new ArrayList<ParsedLine>();
+	/**
+	 * Pulls out the top thing on the Stack.
+	 * 
+	 * @return Top of the Stack
+	 */
+	public ParsedLine popStack(){
+		if(recievedStack.size() > 0)
+			return recievedStack.remove(0);
+		else
+			return null;
 	}
 	/**
-	 * Does stuff with a Line from the Server.
+	 * Peeks at the top of the stack.
 	 * 
-	 * @param line Server Line
+	 * @return Top of the Stack
 	 */
-	public abstract void onLine(ParsedLine line);
-	
+	public ParsedLine peekStack(){
+		if(recievedStack.size() > 0)
+			return recievedStack.get(0);
+		else
+			return null;
+	}
+	/**
+	 * Override this method to run something whenever a line is recieved.
+	 * 
+	 * @param line Line
+	 */
+	public void onLine(ParsedLine line){}
+	/* == Thread Invocation == */
+	/**
+	 * This thread just reads lines from the socket and passes them on
+	 * to an {@link LineParseThread}.
+	 */
 	public void run(){
 		ByteArrayOutputStream buf = new ByteArrayOutputStream();
 		while(true){
@@ -68,7 +115,7 @@ public abstract class IRCConnection extends Thread implements Runnable{
 				if(in.available() > 0){
 					buf.write(in.read());
 					if(buf.toString().endsWith("\r\n")){
-						new LineParseThread(buf.toString()).start();
+						new LineParseThread(buf.toString().substring(0,buf.toString().length()-1)).start();
 						buf.reset();
 					}
 				}
@@ -103,11 +150,17 @@ public abstract class IRCConnection extends Thread implements Runnable{
 		// Testing Program XXX
 		System.out.println("[I] Init");
 		Socket sock = new Socket("morgan.freenode.net",6667);
-		IRCConnection conn = new IRCConnection(sock.getOutputStream(),sock.getInputStream(),"takibot",null,0){
-			public void onLine(ParsedLine line){}
-		};
+		final IRCConnection conn = new IRCConnection(sock.getOutputStream(),sock.getInputStream(),"takibot",null,0);
 		conn.start();
-		conn.join("#takisan");
+		conn.join("##takisan");
+		new Thread(){
+			public void run(){
+				while(true){
+					ParsedLine line = conn.popStack();
+					if(line != null) System.out.println(line);
+				}
+			}
+		}.start();
 		conn.join();
 		sock.close();
 	}

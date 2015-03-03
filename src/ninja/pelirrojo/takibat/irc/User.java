@@ -1,5 +1,7 @@
 package ninja.pelirrojo.takibat.irc;
 
+import java.io.OutputStream;
+import ninja.pelirrojo.util.PrefixedOutputStream;
 import java.util.Formattable;
 import java.util.Formatter;
 
@@ -37,8 +39,9 @@ public class User implements Formattable{
 	 */
 	public static final User parse(String s){
 		if(s.indexOf("@") > 1 && s.indexOf("!") > 0){
-			String[] sz = s.split("[@!]");
-			return new User(sz[0],sz[1],sz[2]);
+			String[] sz = s.split("!");
+			String[] szz = s.split("@");
+			return new User(sz[0],szz[0],szz[1]);
 		}
 		return null;
 	}
@@ -74,6 +77,14 @@ public class User implements Formattable{
 	 */
 	public UserWhois whois(){
 		return null; // TODO
+	}
+	/**
+	 * Gets an Output Stream that is sent to the client.
+	 * 
+	 * @return OutputStream
+	 */
+	public OutputStream getOutputStream(){
+		return new PrefixedOutputStream(IRCConnection.instance.out,String.format("PRIVMSG %s :",nick).getBytes());
 	}
 	/**
 	 * Formats the User in the format of {@code <nick>!<user>@<host>}.

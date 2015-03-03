@@ -3,12 +3,10 @@ package ninja.pelirrojo.takibat.irc;
 public class PrivMsg extends ParsedLine{
 	private User u;
 	private String line;
-	public PrivMsg(String s){
+	protected PrivMsg(String s,User u,String line){
 		super(s);
-		String[] sp = s.split(":",2);
-		String[] pr = sp[1].split(" ");
-		u = User.parse(pr[0]);
-		line = sp[2];
+		this.u = u;
+		this.line = line;
 	}
 	public String toString(){
 		return String.format("<%s> %s",u.getNick(),line.trim());
