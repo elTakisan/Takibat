@@ -1,6 +1,7 @@
 package ninja.pelirrojo.takibat.bot;
 
 import ninja.pelirrojo.takibat.irc.*;
+import java.io.PrintStream;
 
 /**
  * Abstract Class of a Command for the Bot.
@@ -10,5 +11,5 @@ import ninja.pelirrojo.takibat.irc.*;
  * @version INDEV-0
  */
 public abstract class BotCommand{
-	public abstract void onCommand(User u,Channel c,String cmd,String[] args,String raw);
+	public abstract void onCommand(User u,Channel c,String cmd,String[] args,String raw,PrintStream out,PrintStream err);
 }

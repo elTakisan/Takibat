@@ -4,6 +4,10 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+import org.python.core.PyList;
+import org.python.core.PyObject;
+import org.python.util.PythonInterpreter;
+
 import ninja.pelirrojo.takibat.irc.ChanMsg;
 import ninja.pelirrojo.takibat.irc.Channel;
 import ninja.pelirrojo.takibat.irc.IRCConnection;
@@ -19,6 +23,7 @@ public final class Takibat{
 		public void onLine(User u,Channel c,String l){
 			if(l.startsWith(runningConf.getProperty("bot.commandPrefix"))){
 				List<String> spax = Arrays.asList(l.substring(1).split(" "));
+				
 			}
 		}
 		public void onPriv(User u,String l){
@@ -28,15 +33,18 @@ public final class Takibat{
 		};
 	};
 	private static final BotCommand reload = new BotCommand(){
-		public void onCommand(User u,Channel c,String cmd,String[] args,String raw){
+		public void onCommand(User u,Channel c,String cmd,String[] args,String raw,PrintStream out,PrintStream err){
 			plugins.clear();
 			commands.clear();
 			plugins.add(cmdIntPlg);
 			commands.put("reload",this);
 			try{
-				c.getOutputStream().write("Reloaded.\r\n".getBytes());
+				load();
 			}
-			catch(IOException e){}
+			catch(IOException e){
+				err.println(e.getMessage());
+			}
+			out.println("Reloaded");
 		}
 	};
 	public static void main(String[] args) throws Exception{
@@ -63,7 +71,30 @@ public final class Takibat{
 		conn.join();
 		sock.close();
 	}
-	public static void reload(String s){
-		
+	private static void load() throws IOException{
+		File d = new File("plugins/");
+		if(!d.exists())
+			d.mkdir();
+		for(File f:d.listFiles()){
+			if(f.toString().endsWith(".py"))
+				loadPy(f);
+			if(f.toString().endsWith(".jar"))
+				loadJar(f);
+		}
+	}
+	private static void loadPy(File f) throws IOException{
+		PythonInterpreter i = new PythonInterpreter();
+		i.execfile(new FileInputStream(f));
+		i.exec("__d = dir()");
+		PyList dir = (PyList) i.get("__d");
+		for(Object o:dir){
+			String s = o.toString();
+			if(s.startsWith("__") || s.equals("BotPlugin") || s.equals("BotCommand"))
+				continue;
+			i.exec("__do = dir("+s+")");
+		}
+	}
+	private static void loadJar(File f) throws IOException{
+		// TODO Load .Jar
 	}
 }
