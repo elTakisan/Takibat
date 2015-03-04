@@ -8,7 +8,18 @@ public class PrivMsg extends ParsedLine{
 		this.u = u;
 		this.line = line;
 	}
+	public User getUser(){
+		return u;
+	}
+	public String getLine(){
+		return line;
+	}
 	public String toString(){
-		return String.format("<%s> %s",u.getNick(),line.trim());
+		try{
+			return String.format("<%s> %s",u.getNick(),line.trim());
+		}
+		catch(Exception e){
+			return super.toString();
+		}
 	}
 }

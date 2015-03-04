@@ -1,7 +1,6 @@
 package ninja.pelirrojo.takibat.irc;
 
 import java.io.*;
-import java.net.Socket;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -12,7 +11,7 @@ import java.util.ArrayList;
  * @since INDEV-0
  * @version INDEV-0
  */
-public final class IRCConnection extends Thread implements Runnable{
+public class IRCConnection extends Thread implements Runnable{
 	/**
 	 * Thread to parse an IRC Line.
 	 * 
@@ -20,7 +19,7 @@ public final class IRCConnection extends Thread implements Runnable{
 	 * @since INDEV-0
 	 * @version INDEV-0
 	 */
-	private class LineParseThread extends Thread implements Runnable{
+	private final class LineParseThread extends Thread implements Runnable{
 		private final String line;
 		private LineParseThread(String line){
 			this.line = line;
@@ -37,6 +36,7 @@ public final class IRCConnection extends Thread implements Runnable{
 			}
 			else{
 				ParsedLine line = ParsedLine.parse(this.line);
+				debug.println(line);
 				recievedStack.add(line);
 				onLine(line);
 			}
@@ -46,6 +46,8 @@ public final class IRCConnection extends Thread implements Runnable{
 	protected final InputStream in;
 	/** OutputStream to the Connection. */
 	protected final OutputStream out;
+	
+	protected PrintStream debug;
 	
 	protected static IRCConnection instance;
 	
@@ -96,6 +98,19 @@ public final class IRCConnection extends Thread implements Runnable{
 			return null;
 	}
 	/**
+	 * Sets a debug output stream.
+	 * 
+	 * @param out Output Stream to set it to
+	 */
+	public void setDebugOut(OutputStream out){
+		if(out == null){
+			out = new OutputStream(){
+				public void write(int b) throws IOException{}
+			};
+		}
+		debug = new PrintStream(out);
+	}
+	/**
 	 * Override this method to run something whenever a line is recieved.
 	 * 
 	 * @param line Line
@@ -144,24 +159,5 @@ public final class IRCConnection extends Thread implements Runnable{
 		catch(IOException e){
 			System.err.printf("[E] %s%n",e.getLocalizedMessage());
 		}
-	}
-	
-	public static void main(String[] args) throws Exception{
-		// Testing Program XXX
-		System.out.println("[I] Init");
-		Socket sock = new Socket("morgan.freenode.net",6667);
-		final IRCConnection conn = new IRCConnection(sock.getOutputStream(),sock.getInputStream(),"takibot",null,0);
-		conn.start();
-		conn.join("##takisan");
-		new Thread(){
-			public void run(){
-				while(true){
-					ParsedLine line = conn.popStack();
-					if(line != null) System.out.println(line);
-				}
-			}
-		}.start();
-		conn.join();
-		sock.close();
 	}
 }

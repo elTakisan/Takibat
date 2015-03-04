@@ -11,6 +11,10 @@ public class ChanMsg extends PrivMsg{
 		this.l = l;
 	}
 	
+	public Channel getChan(){
+		return new Channel(d);
+	}
+	
 	public String toString(){
 		return String.format("{%s} <%s> %s",d,u.getNick(),l.trim());
 	}
