@@ -28,22 +28,30 @@ class ExampleCommand(BotCommand):
             chan.say("You're not an Operator!")
 
 class ExamplePlugin(BotPlugin):
-    def onLine(self,user,chan,line):
+    periodicInterval = -1
+    ## The Time interval to run the `Periodic()` method.
+    ## -1 is don't run .periodic(...)
+    def onLine(self,user,chan,line,out,err):
         ## If you want a stream instead of line methods on user,
         ## run user.getStream()
         pass
-    def onSlashMe(self,user,chan,line):
+    def onSlashMe(self,user,chan,line,out,err):
         pass
-    def onJoin(self,user,chan):
+    def onJoin(self,user,chan,out,err):
         pass
-    def onPart(self,user,chan,message):
+    def onPart(self,user,chan,message,out,err):
         pass
-    def onPriv(self,user,message):
+    def onPriv(self,user,message,out,err):
         pass
-    def onUnknown(self,line):
+    def onUnknown(self,line,out,err):
         """
         This is run whenever something that I don't know exists
         is sent into the IRC Bot.
+        """
+        pass
+    def periodic(self,chan,out,err):
+        """
+        Periodic Execution in a seperate thread.
         """
         pass
 

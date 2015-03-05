@@ -36,7 +36,7 @@ public class IRCConnection extends Thread implements Runnable{
 			}
 			else{
 				ParsedLine line = ParsedLine.parse(this.line);
-				debug.println(line);
+				debug.printf("[D] %s%n",line.toString());
 				recievedStack.add(line);
 				onLine(line);
 			}
@@ -46,7 +46,7 @@ public class IRCConnection extends Thread implements Runnable{
 	protected final InputStream in;
 	/** OutputStream to the Connection. */
 	protected final OutputStream out;
-	
+	/** PrintStream for debug purposes. */
 	protected PrintStream debug;
 	
 	protected static IRCConnection instance;
@@ -59,10 +59,15 @@ public class IRCConnection extends Thread implements Runnable{
 	 * @param in InputStream
 	 * @param nick Nickname to use
 	 * @param pass Password to Connect (may be null)
-	 * @param pushpings Push the Pings up to the Server
+	 * @param pushpings <b>FUTURE</b> Push the Pings up to the Server
 	 * @throws IOException
 	 */
-	public IRCConnection(final OutputStream out,final InputStream in,final String nick,final String pass,final int pushpings) throws IOException{
+	public IRCConnection(
+			final OutputStream out,
+			final InputStream in,
+			final String nick,
+			final String pass,
+			final int pushpings) throws IOException{
 		this.out = out;
 		this.in  = in;
 		this.myNick = nick;
@@ -73,6 +78,12 @@ public class IRCConnection extends Thread implements Runnable{
 		
 		instance = this;
 	}
+	/** <b>FUTURE</b>: pause reading of the stack. */
+	/* What I want to do with this, is whenever a whois/who is run, set this
+	 * to the length of the Stack, so that we know which one to start reading
+	 * on.
+	 */
+	private long holdStackAt = -1;
 	/** Stack of incoming IRC Messages. */
 	private List<ParsedLine> recievedStack = new ArrayList<ParsedLine>();
 	/**
@@ -81,7 +92,7 @@ public class IRCConnection extends Thread implements Runnable{
 	 * @return Top of the Stack
 	 */
 	public ParsedLine popStack(){
-		if(recievedStack.size() > 0)
+		if(recievedStack.size() > 0 || holdStackAt > -1)
 			return recievedStack.remove(0);
 		else
 			return null;
