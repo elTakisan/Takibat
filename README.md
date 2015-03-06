@@ -1,8 +1,6 @@
 Takibat
 =======
 
-***PLEASE NOTE I AM STILL WORKING ON THIS! IT'S NOT IN ANY STATE TO BE USED AT THE MOMENT***
-
 A General-purpose IRC Bot that's designed to be easily extensable
 for various uses. The original implementation was just a Python
 bot that went to fetch live baseball scores (hence why it's
@@ -17,9 +15,18 @@ Python File.
 License
 -------
 
-Pick a license sometime.
+I'm going to be very weird and make up a new license, called the
+Wheaton-Green License. It says this:
+
+> Don't be a dick.
+>
+> Don't forget to be awesome.
 
 Todo
 ----
 
++ Add autodownloader for Jython Jar.
 + Permit loading/unloading of individual scripts
++ Add a .jar loader for plugins and commands
++ Add a Brainfuck interpreter for plugins and commands
+

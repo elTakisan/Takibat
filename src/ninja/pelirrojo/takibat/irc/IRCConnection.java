@@ -76,6 +76,8 @@ public class IRCConnection extends Thread implements Runnable{
 		this.out.write(String.format("NICK %s\r\n",nick).getBytes());
 		this.out.write(String.format("USER %s %s %s :%s\r\n",nick,nick,"localhost",nick).getBytes());
 		
+		setDebugOut(null);
+		
 		instance = this;
 	}
 	/** <b>FUTURE</b>: pause reading of the stack. */

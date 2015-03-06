@@ -31,7 +31,7 @@ public final class Takibat{
 	/** Plugin to interpret lines as commands. */
 	private static final BotPlugin cmdIntPlg = new BotPlugin(){
 		public void onLine(User u,Channel c,String l,PrintStream out,PrintStream err){
-			if(l.startsWith(runningConf.getProperty("bot.commandPrefix"))){
+			if(l.startsWith("!")){
 				List<String> spax = Arrays.asList(l.substring(1).split(" "));
 				String cmd = spax.remove(0);
 				if(!commands.containsKey(cmd))
@@ -92,7 +92,7 @@ public final class Takibat{
 		Socket sock = new Socket("morgan.freenode.net",6667);
 		plugins.add(cmdIntPlg);
 		commands.put("reload",reload);
-		runningConf.setProperty("bot.commandprefix","!");
+		load(System.err);
 		IRCConnection conn = new IRCConnection(sock.getOutputStream(),sock.getInputStream(),"takibot",null,0){
 			public void onLine(ParsedLine line){
 				if(line instanceof PrivMsg){
@@ -108,6 +108,7 @@ public final class Takibat{
 				}
 			}
 		};
+		conn.setDebugOut(System.out);
 		conn.start();
 		conn.join("##takisan");
 		conn.join();
@@ -149,8 +150,13 @@ public final class Takibat{
 			String s = o.toString();
 			if(s.startsWith("__") || s.equals("BotPlugin") || s.equals("BotCommand"))
 				continue; // We don't want the base classes included
-			i.exec("__ec = issubclass("+s+",BotCommmand)");
-			i.exec("__ep = issubclass("+s+",BotPlugin)");
+			try{
+				i.exec("__ec = issubclass("+s+",BotCommmand)");
+			}
+			catch(Exception e){i.exec("__ec = 0");}
+			try{
+				i.exec("__ep = issubclass("+s+",BotPlugin)");
+			}catch(Exception e){i.exec("__ep = 0");}
 			if(i.get("__ec").__nonzero__()){
 				// Command Processing
 				i.exec("__do = dir("+s+")");
@@ -162,6 +168,7 @@ public final class Takibat{
 				PyList provides = (PyList) i.get(s+".provides");
 				for(Object lst:provides){
 					commands.put(lst.toString(),instance);
+					System.err.printf("Loaded %s from %s",s,f);
 				}
 			}
 			else if(i.get("__ep").__nonzero__()){
