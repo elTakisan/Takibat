@@ -1,5 +1,6 @@
 package ninja.pelirrojo.takibat.irc;
 
+import java.io.IOException;
 import java.io.OutputStream;
 
 import ninja.pelirrojo.util.PrefixedOutputStream;
@@ -16,5 +17,11 @@ public class Channel{
 	}
 	public OutputStream getOutputStream(){
 		return out;
+	}
+	public void msg(String s){
+		try{
+			IRCConnection.instance.out.write(String.format("PRIVMSG %s :%s\r\n",chanName,s).getBytes());
+		}
+		catch(IOException e){}
 	}
 }

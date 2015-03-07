@@ -5,6 +5,7 @@ import java.net.*;
 import java.util.*;
 
 import org.python.core.PyList;
+import org.python.core.PyObject;
 import org.python.util.PythonInterpreter;
 
 import ninja.pelirrojo.takibat.irc.ChanMsg;
@@ -32,15 +33,15 @@ public final class Takibat{
 	private static final BotPlugin cmdIntPlg = new BotPlugin(){
 		public void onLine(User u,Channel c,String l,PrintStream out,PrintStream err){
 			if(l.startsWith("!")){
+				System.err.println("Line Starts with Command Prefix");
+				System.err.println(commands.containsKey(l.substring(1).trim()));
 				List<String> spax = Arrays.asList(l.substring(1).split(" "));
-				String cmd = spax.remove(0);
-				if(!commands.containsKey(cmd))
-					return;
-				commands.get(cmd).onCommand(
+				String cmd = spax.get(0);
+				commands.get(l.substring(1).trim().split(" ")[0]).onCommand(
 						u,
 						c,
 						cmd,
-						spax.toArray(new String[spax.size()]),
+						spax.subList(1,spax.size()).toArray(new String[spax.size()-1]),
 						l,
 						new PrintStream(c.getOutputStream()){
 							public void println(){
@@ -57,18 +58,21 @@ public final class Takibat{
 		public void onPriv(User u,String l,PrintStream out,PrintStream err){
 			if(l.startsWith(runningConf.getProperty("bot.commandPrefix"))){
 				List<String> spax = Arrays.asList(l.substring(1).split(" "));
-				String cmd = spax.remove(0);
-				if(!commands.containsKey(cmd))
-					return;
-				commands.get(cmd).onCommand(
+				String cmd = spax.get(0);
+				commands.get(l.substring(1).trim().split(" ")[0]).onCommand(
 						u,
 						null,
 						cmd,
-						spax.toArray(new String[spax.size()]),
+						spax.subList(1,spax.size()).toArray(new String[spax.size()]),
 						l,
 						out,
 						err);
 			}
+		}
+	};
+	private static final BotCommand jingCommand = new BotCommand(){
+		public void onCommand(User u,Channel c,String cmd,String[] args,String raw,PrintStream out,PrintStream err){
+			c.msg("Jong");
 		}
 	};
 	/** Reload Command. */
@@ -78,6 +82,7 @@ public final class Takibat{
 			commands.clear();
 			plugins.add(cmdIntPlg);
 			commands.put("reload",this);
+			commands.put("jing",jingCommand);
 			try{
 				load(err);
 			}
@@ -92,7 +97,10 @@ public final class Takibat{
 		Socket sock = new Socket("morgan.freenode.net",6667);
 		plugins.add(cmdIntPlg);
 		commands.put("reload",reload);
+		commands.put("jing",jingCommand);
 		load(System.err);
+		System.err.println(plugins);
+		System.err.println(commands);
 		IRCConnection conn = new IRCConnection(sock.getOutputStream(),sock.getInputStream(),"takibot",null,0){
 			public void onLine(ParsedLine line){
 				if(line instanceof PrivMsg){
@@ -108,7 +116,6 @@ public final class Takibat{
 				}
 			}
 		};
-		conn.setDebugOut(System.out);
 		conn.start();
 		conn.join("##takisan");
 		conn.join();
@@ -125,6 +132,7 @@ public final class Takibat{
 		if(!d.exists())
 			d.mkdir();
 		for(File f:d.listFiles()){
+			err.println(f);
 			try{
 				if(f.toString().endsWith(".py"))
 					loadPy(f);
@@ -142,6 +150,7 @@ public final class Takibat{
 	 * @throws BotException Bot Problem
 	 */
 	private static void loadPy(File f) throws IOException,BotException{
+		System.err.printf("Loading %s%n",f);
 		PythonInterpreter i = new PythonInterpreter();
 		i.execfile(new FileInputStream(f));
 		i.exec("__d = dir()");
@@ -150,32 +159,40 @@ public final class Takibat{
 			String s = o.toString();
 			if(s.startsWith("__") || s.equals("BotPlugin") || s.equals("BotCommand"))
 				continue; // We don't want the base classes included
-			try{
-				i.exec("__ec = issubclass("+s+",BotCommmand)");
+			PyList objd = (PyList) i.get(s).__dir__();
+			if(objd.contains("provides") && objd.contains("onCommand")){
+				// It'z a Command, Mario.
+				BotCommand cmd = new PyCmdFct(i.get(s)).create();
+				commands.put(i.get(s+"provides").toString(),cmd);
 			}
-			catch(Exception e){i.exec("__ec = 0");}
-			try{
-				i.exec("__ep = issubclass("+s+",BotPlugin)");
-			}catch(Exception e){i.exec("__ep = 0");}
-			if(i.get("__ec").__nonzero__()){
-				// Command Processing
-				i.exec("__do = dir("+s+")");
-				PyList object = (PyList) i.get("__do");
-				if(!object.contains("provides"))
-					throw new BotException(String.format("Class %s in %s doesn't have `provides` as a class variable",s,f));
-				i.exec("__i = "+s+"()");
-				BotCommand instance = (BotCommand) i.get("__i").__tojava__(BotCommand.class);
-				PyList provides = (PyList) i.get(s+".provides");
-				for(Object lst:provides){
-					commands.put(lst.toString(),instance);
-					System.err.printf("Loaded %s from %s",s,f);
-				}
+			if(objd.contains("onLine") ||
+			   objd.contains("onSlashMe") ||
+			   objd.contains("onJoin") ||
+			   objd.contains("onPart") ||
+			   objd.contains("onPriv") ||
+			   objd.contains("onUnknown") ||
+			   objd.contains("periodic")){
+				// Plugin TODO
 			}
-			else if(i.get("__ep").__nonzero__()){
-				i.exec("__i = "+s+"()");
-				BotPlugin instance = (BotPlugin) i.get("__i").__tojava__(BotPlugin.class);
-				plugins.add(instance);
-			}
+		}
+	}
+	private static class PyCmdFct{
+		private PyObject cfo;
+		private PyCmdFct(PyObject cfo){
+			this.cfo = cfo;
+		}
+		private BotCommand create(){
+			return (BotCommand) cfo.__call__().__tojava__(BotCommand.class);
+		}
+	}
+	
+	private static class PyPlgFct{
+		private PyObject cfo;
+		private PyPlgFct(PyObject cfo){
+			this.cfo = cfo;
+		}
+		private BotPlugin create(){
+			return (BotPlugin) cfo.__call__().__tojava__(BotPlugin.class);
 		}
 	}
 }

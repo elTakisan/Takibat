@@ -1,10 +1,10 @@
 #!/usr/bin/python
-# -*- coding: latin-1 -*-
+# -*- coding: utf8 -*-
 
 from ninja.pelirrojo.takibat.bot import BotCommand
 
 class PingCommand(BotCommand):
-    provides = [ "ping" ]
+    provides = "ping"
     def onCommand(self,user,chan,cmd,args,raw,out,err):
         """
         Arguments:
@@ -17,5 +17,5 @@ class PingCommand(BotCommand):
         out  === Standard Output (Java PrintStream with a .slashMe(String))
         err  === Standard Error  (Java PrintStream with a .slashMe(String))
         """
-        out.println("Pong!")
+        chan.msg("Pong!")
 

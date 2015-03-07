@@ -1,5 +1,6 @@
 package ninja.pelirrojo.takibat.irc;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import ninja.pelirrojo.util.PrefixedOutputStream;
 import java.util.Formattable;
@@ -85,6 +86,18 @@ public class User implements Formattable{
 	 */
 	public OutputStream getOutputStream(){
 		return new PrefixedOutputStream(IRCConnection.instance.out,String.format("PRIVMSG %s :",nick).getBytes());
+	}
+	public void msg(String s){ // TODO Document
+		try{
+			IRCConnection.instance.out.write(String.format("PRIVMSG %s :%s\r\n",nick,s).getBytes());
+		}
+		catch(IOException e){}
+	}
+	public void notice(String s){
+		try{
+			IRCConnection.instance.out.write(String.format("NOTICE %s :%s\r\n",nick,s).getBytes());
+		}
+		catch(IOException e){}
 	}
 	/**
 	 * Formats the User in the format of {@code <nick>!<user>@<host>}.
