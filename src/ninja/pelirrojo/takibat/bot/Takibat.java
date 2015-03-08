@@ -6,11 +6,14 @@ import java.util.*;
 
 import org.python.core.PyList;
 import org.python.core.PyObject;
+import org.python.core.PyClass;
+import org.python.core.PyString;
 import org.python.util.PythonInterpreter;
 
 import ninja.pelirrojo.takibat.irc.ChanMsg;
 import ninja.pelirrojo.takibat.irc.Channel;
 import ninja.pelirrojo.takibat.irc.IRCConnection;
+import ninja.pelirrojo.takibat.irc.IRCException;
 import ninja.pelirrojo.takibat.irc.ParsedLine;
 import ninja.pelirrojo.takibat.irc.PrivMsg;
 import ninja.pelirrojo.takibat.irc.User;
@@ -159,20 +162,25 @@ public final class Takibat{
 			String s = o.toString();
 			if(s.startsWith("__") || s.equals("BotPlugin") || s.equals("BotCommand"))
 				continue; // We don't want the base classes included
-			PyList objd = (PyList) i.get(s).__dir__();
-			if(objd.contains("provides") && objd.contains("onCommand")){
-				// It'z a Command, Mario.
-				BotCommand cmd = new PyCmdFct(i.get(s)).create();
-				commands.put(i.get(s+"provides").toString(),cmd);
+			i.exec(	"__ic = 0\n" +
+					"__ip = 0\n" +
+					"try:\n" +
+					"    __ic = issubclass("+s+",BotCommand)\n" +
+					"except:\n" +
+					"    pass\n" +
+					"try:\n" +
+					"    __ip = issubclass("+s+",BotPlugin)\n" +
+					"except:\n" +
+					"    pass\n");
+			if(i.get("__ic").__nonzero__()){
+				PyObject oj = i.get(s);
+				PyList odir = (PyList) oj.__dir__();
+				if(!odir.contains("provides"))
+					throw new BotException(String.format("%s in %s does not have Provides as a class variable.",s,f));
+				
 			}
-			if(objd.contains("onLine") ||
-			   objd.contains("onSlashMe") ||
-			   objd.contains("onJoin") ||
-			   objd.contains("onPart") ||
-			   objd.contains("onPriv") ||
-			   objd.contains("onUnknown") ||
-			   objd.contains("periodic")){
-				// Plugin TODO
+			if(i.get("__ip").__nonzero__()){
+				
 			}
 		}
 	}
