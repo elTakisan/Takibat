@@ -9,9 +9,7 @@ from ninja.pelirrojo.takibat.bot import BotPlugin,BotCommand
 
 class ExampleCommand(BotCommand):
     # provides = command that runs this code
-    provides = [ "example" ] # Code will run a Tizzy without this
-    def getProvides(self):
-        return [ "example" ] # This is needed for a temporary hack to get the code working
+    provides = [ "example" ]
     def onCommand(self,user,chan,cmd,args,raw,out,err):
         """
         Arguments:
@@ -33,7 +31,8 @@ class ExampleCommand(BotCommand):
 class ExamplePlugin(BotPlugin):
     periodicInterval = -1
     ## The Time interval to run the `Periodic()` method.
-    ## -1 is don't run .periodic(...)
+    ## Code will also throw a tizzy if periodicInterval XOR
+    ##  .periodic().
     def onLine(self,user,chan,line,out,err):
         pass
     def onSlashMe(self,user,chan,line,out,err):

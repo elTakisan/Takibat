@@ -27,6 +27,7 @@ Todo
 ----
 
 + Add !help / !list Command
++ Get `out` and `err` stream working in Plugin/Command.
 + Find the cause of the first 5 command processing threads
   throwing a Null Pointer Exception. [IRC Library]
 + Switch the IRC connection from Sockets to Writers, to prevent
