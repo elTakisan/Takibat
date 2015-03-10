@@ -12,21 +12,30 @@ Java) handles the IRC Connection and functions such as
 (re)loading Python Plugins and dispatching commands to the proper
 Python File.
 
-License
--------
+REQUIRES JYTHON IN THE CLASSPATH
 
-I'm going to be very weird and make up a new license, called the
-Wheaton-Green License. It says this:
+Included Commands
+-----------------
 
-> Don't be a dick.
->
-> Don't forget to be awesome.
++ !jing   --- Ping in Java Code
++ !ping   --- Ping in Python Code
++ !rot13  --- Rot13 the rest of the line
++ !reload --- I have not tested this, but theoretically it should
+   reload all scripts and plugins.
 
 Todo
 ----
 
-+ Add autodownloader for Jython Jar.
++ Add !help / !list Command
++ Find the cause of the first 5 command processing threads
+  throwing a Null Pointer Exception. [IRC Library]
++ Switch the IRC connection from Sockets to Writers, to prevent
+  Charset problems.
 + Permit loading/unloading of individual scripts
 + Add a .jar loader for plugins and commands
-+ Add a Brainfuck interpreter for plugins and commands
+
+License
+-------
+
+WTFPL.
 

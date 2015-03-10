@@ -6,14 +6,11 @@ import java.util.*;
 
 import org.python.core.PyList;
 import org.python.core.PyObject;
-import org.python.core.PyClass;
-import org.python.core.PyString;
 import org.python.util.PythonInterpreter;
 
 import ninja.pelirrojo.takibat.irc.ChanMsg;
 import ninja.pelirrojo.takibat.irc.Channel;
 import ninja.pelirrojo.takibat.irc.IRCConnection;
-import ninja.pelirrojo.takibat.irc.IRCException;
 import ninja.pelirrojo.takibat.irc.ParsedLine;
 import ninja.pelirrojo.takibat.irc.PrivMsg;
 import ninja.pelirrojo.takibat.irc.User;
@@ -36,8 +33,6 @@ public final class Takibat{
 	private static final BotPlugin cmdIntPlg = new BotPlugin(){
 		public void onLine(User u,Channel c,String l,PrintStream out,PrintStream err){
 			if(l.startsWith("!")){
-				System.err.println("Line Starts with Command Prefix");
-				System.err.println(commands.containsKey(l.substring(1).trim()));
 				List<String> spax = Arrays.asList(l.substring(1).split(" "));
 				String cmd = spax.get(0);
 				commands.get(l.substring(1).trim().split(" ")[0]).onCommand(
@@ -97,14 +92,24 @@ public final class Takibat{
 	};
 	/** Program Initalization. */
 	public static void main(String[] args) throws Exception{
-		Socket sock = new Socket("morgan.freenode.net",6667);
+		if(!new File("takibat.conf").exists()){
+			Properties tempProps = new Properties();
+			tempProps.setProperty("bot.commandprefix","!");
+			tempProps.setProperty("irc.server","irc.freenode.net");
+			tempProps.setProperty("irc.port","6667");
+			tempProps.setProperty("irc.nickname","takibot");
+			tempProps.setProperty("irc.room","##takisan");
+			tempProps.store(new FileOutputStream("takibat.conf"),null);
+			System.out.println("Edit the file `takibat.conf` and then launch again");
+			System.exit(0);
+		}
+		runningConf.load(new FileInputStream("takibat.conf"));
+		final Socket sock = new Socket(runningConf.getProperty("irc.server"),Integer.parseInt(runningConf.getProperty("irc.port")));
 		plugins.add(cmdIntPlg);
 		commands.put("reload",reload);
 		commands.put("jing",jingCommand);
 		load(System.err);
-		System.err.println(plugins);
-		System.err.println(commands);
-		IRCConnection conn = new IRCConnection(sock.getOutputStream(),sock.getInputStream(),"takibot",null,0){
+		IRCConnection conn = new IRCConnection(sock.getOutputStream(),sock.getInputStream(),runningConf.getProperty("irc.nickname"),null,0){
 			public void onLine(ParsedLine line){
 				if(line instanceof PrivMsg){
 					PrivMsg msg = (PrivMsg) line;
@@ -114,15 +119,24 @@ public final class Takibat{
 							plug.onLine(m.getUser(),m.getChan(),m.getLine(),null,null); // TODO Get Out and Err
 						}
 						else
-							plug.onPriv(msg.getUser(),msg.getLine(),null,null); // TODO
+							plug.onPriv(msg.getUser(),msg.getLine(),null,null); // TODO Get out and Err
 					}
 				}
 			}
 		};
 		conn.start();
-		conn.join("##takisan");
+		conn.join(runningConf.getProperty("irc.room"));
 		conn.join();
-		sock.close();
+		Runtime.getRuntime().addShutdownHook(new Thread(){
+			public void run(){
+				try{
+					sock.close();
+				}
+				catch(Exception e){
+					e.printStackTrace();
+				}
+			}
+		});
 	}
 	/**
 	 * Loads all plugins.
@@ -135,7 +149,6 @@ public final class Takibat{
 		if(!d.exists())
 			d.mkdir();
 		for(File f:d.listFiles()){
-			err.println(f);
 			try{
 				if(f.toString().endsWith(".py"))
 					loadPy(f);
@@ -153,7 +166,6 @@ public final class Takibat{
 	 * @throws BotException Bot Problem
 	 */
 	private static void loadPy(File f) throws IOException,BotException{
-		System.err.printf("Loading %s%n",f);
 		PythonInterpreter i = new PythonInterpreter();
 		i.execfile(new FileInputStream(f));
 		i.exec("__d = dir()");
@@ -177,30 +189,25 @@ public final class Takibat{
 				PyList odir = (PyList) oj.__dir__();
 				if(!odir.contains("provides"))
 					throw new BotException(String.format("%s in %s does not have Provides as a class variable.",s,f));
-				
+				try{
+					i.exec(	"__p = 0\n" +
+							"try:\n" +
+							"    __p = "+s+".provides\n" +
+							"except:\n" +
+							"    pass\n");
+					PyList provides = (PyList) i.get("__p");
+					BotCommand ob = (BotCommand) oj.__call__().__tojava__(BotCommand.class);
+					for(Object pr:provides){
+						commands.put(pr.toString(),ob);
+					}
+				}
+				catch(Exception e){
+					throw new BotException(String.format("%s in %s has something invalid",e,f),e);
+				}
 			}
 			if(i.get("__ip").__nonzero__()){
-				
+				// TODO Load Plugins
 			}
-		}
-	}
-	private static class PyCmdFct{
-		private PyObject cfo;
-		private PyCmdFct(PyObject cfo){
-			this.cfo = cfo;
-		}
-		private BotCommand create(){
-			return (BotCommand) cfo.__call__().__tojava__(BotCommand.class);
-		}
-	}
-	
-	private static class PyPlgFct{
-		private PyObject cfo;
-		private PyPlgFct(PyObject cfo){
-			this.cfo = cfo;
-		}
-		private BotPlugin create(){
-			return (BotPlugin) cfo.__call__().__tojava__(BotPlugin.class);
 		}
 	}
 }

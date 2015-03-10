@@ -4,7 +4,7 @@
 from ninja.pelirrojo.takibat.bot import BotCommand
 
 class PingCommand(BotCommand):
-    provides = "ping"
+    provides = [ "ping" ]
     def onCommand(self,user,chan,cmd,args,raw,out,err):
         """
         Arguments:

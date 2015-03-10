@@ -9,12 +9,14 @@ from ninja.pelirrojo.takibat.bot import BotPlugin,BotCommand
 
 class ExampleCommand(BotCommand):
     # provides = command that runs this code
-    provides = [ "example" ]
+    provides = [ "example" ] # Code will run a Tizzy without this
+    def getProvides(self):
+        return [ "example" ] # This is needed for a temporary hack to get the code working
     def onCommand(self,user,chan,cmd,args,raw,out,err):
         """
         Arguments:
 
-        user === The User Options as a Dict
+        user === The User as an object
         chan === The Channel that was sent to
         cmd  === The Command the user ran
         args === The Arguments to the command
@@ -22,11 +24,13 @@ class ExampleCommand(BotCommand):
         out  === Standard Output (Java PrintStream with a .slashMe(String))
         err  === Standard Error  (Java PrintStream with a .slashMe(String))
         """
+        ### out and err don't work right now, please use chan.msg(String) or user.msg(String)
         if user.isOp():
             chan.say("Hi {}! You're an Operator!".format(user.name))
         else:
             chan.say("You're not an Operator!")
 
+# Plugins currently aren't coded to load right now.
 class ExamplePlugin(BotPlugin):
     periodicInterval = -1
     ## The Time interval to run the `Periodic()` method.

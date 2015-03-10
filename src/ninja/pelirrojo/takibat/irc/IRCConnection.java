@@ -27,7 +27,7 @@ public class IRCConnection extends Thread implements Runnable{
 		public void run(){
 			if(this.line.startsWith("PING ")){
 				try{
-					System.out.println("[I] Sent Pong");
+					debug.println("[I] Sent Pong");
 					out.write("PONG\r\n".getBytes() );
 				}
 				catch(IOException e){
