@@ -14,13 +14,16 @@ Python File.
 
 REQUIRES JYTHON IN THE CLASSPATH
 
+***I DO NOT CONSIDER THIS CODE TO BE IN A WORKABLE SYSTEM. USE AT
+YOUR OWN RISK, PLEASE, AND EXPECT IT TO BREAK FREQUENTLY***
+
 Included Commands
 -----------------
 
-+ !jing   --- Ping in Java Code
-+ !ping   --- Ping in Python Code
-+ !rot13  --- Rot13 the rest of the line
-+ !reload --- I have not tested this, but theoretically it should
++ `!jing`   --- Ping in Java Code
++ `!ping`   --- Ping in Python Code
++ `!rot13`  --- Rot13 the rest of the line
++ `!reload` --- I have not tested this, but theoretically it should
    reload all scripts and plugins.
 
 Todo

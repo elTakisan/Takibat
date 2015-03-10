@@ -79,6 +79,7 @@ public final class Takibat{
 		public void onCommand(User u,Channel c,String cmd,String[] args,String raw,PrintStream out,PrintStream err){
 			plugins.clear();
 			commands.clear();
+			periodic.clear();
 			plugins.add(cmdIntPlg);
 			commands.put("reload",this);
 			commands.put("jing",jingCommand);
