@@ -2,7 +2,6 @@ package ninja.pelirrojo.takibat.irc;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import ninja.pelirrojo.util.PrefixedOutputStream;
 import java.util.Formattable;
 import java.util.Formatter;
 

@@ -29,6 +29,7 @@ public final class Takibat{
 	public static Set<BotPlugin> plugins = new HashSet<BotPlugin>();
 	/** Map of the commands. */
 	public static Map<String,BotCommand> commands = new HashMap<String,BotCommand>();
+	public static Set<Timer> periodic = new HashSet<Timer>();
 	/** Plugin to interpret lines as commands. */
 	private static final BotPlugin cmdIntPlg = new BotPlugin(){
 		public void onLine(User u,Channel c,String l,PrintStream out,PrintStream err){
@@ -206,7 +207,28 @@ public final class Takibat{
 				}
 			}
 			if(i.get("__ip").__nonzero__()){
-				// TODO Load Plugins
+				PyObject oj = i.get(s);
+				PyList odir = (PyList) oj.__dir__();
+				if(odir.contains("periodic") ^ odir.contains("periodicInterval"))
+					throw new BotException(String.format("%s in %s does not define either `periodicInterval` or `periodic`. Both must be defined"));
+				
+				final BotPlugin plugin = (BotPlugin) oj.__call__().__tojava__(BotPlugin.class);
+				plugins.add(plugin);
+				if(odir.contains("periodic") && odir.contains("periodicInterval")){
+					i.exec(	"__i = 0\n" +
+							"try:\n" +
+							"    __i = "+s+".periodicInterval\n" +
+							"except:\n" +
+							"    pass\n");
+					int interval = i.get("__i").asInt() * 1000;
+					TimerTask task = new TimerTask(){
+						public void run(){
+							plugin.periodic(new Channel(runningConf.getProperty("irc.room")),null,null);
+						}
+					};
+					Timer t = new Timer();
+					t.schedule(task, new Date(System.currentTimeMillis()+interval),interval);
+				}
 			}
 		}
 	}

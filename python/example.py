@@ -26,18 +26,15 @@ class ExampleCommand(BotCommand):
         """
         ### out and err don't work right now, please use chan.msg(String) or user.msg(String)
         if user.isOp():
-            chan.say("Hi {}! You're an Operator!".format(user.name))
+            chan.msg("Hi {}! You're an Operator!".format(user.name))
         else:
-            chan.say("You're not an Operator!")
+            chan.msg("You're not an Operator!")
 
-# Plugins currently aren't coded to load right now.
 class ExamplePlugin(BotPlugin):
     periodicInterval = -1
     ## The Time interval to run the `Periodic()` method.
     ## -1 is don't run .periodic(...)
     def onLine(self,user,chan,line,out,err):
-        ## If you want a stream instead of line methods on user,
-        ## run user.getStream()
         pass
     def onSlashMe(self,user,chan,line,out,err):
         pass
