@@ -30,7 +30,7 @@ Todo
 + Find the cause of the first 5 command processing threads
   throwing a Null Pointer Exception. [IRC Library]
 + Switch the IRC connection from Sockets to Writers, to prevent
-  Charset problems.
+  Charset problems. [IRC Library]
 + Permit loading/unloading of individual scripts
 + Add a .jar loader for plugins and commands
 
