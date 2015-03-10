@@ -38,8 +38,4 @@ Todo
 + Permit loading/unloading of individual scripts
 + Add a .jar loader for plugins and commands
 
-License
--------
-
-WTFPL.
 
